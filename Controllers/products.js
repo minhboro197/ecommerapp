@@ -162,7 +162,27 @@ exports.get_allproducts = (req, res) =>{
     var query = "SELECT * FROM `Products`";
     var pagination = "LIMIT " + pagesize + " OFFSET " + pagenum * pagesize;
     query += pagination;
-    
+
+    pool.getConnection(function(err, conn){
+        if(err){
+            res.status(400).send("can't connect to the database")
+            return
+        }
+        conn.query(query, function(err, rows) {
+            if(err){
+                res.status(400).send(err["sqlMessage"])
+                return
+            }
+            res.send(rows)
+            conn.release();
+        })
+    })
+}
+
+exports.get_all_image_from_product = (req, res) =>{
+    var product_id = req.query.product_id;
+    var query = "SELECT * FROM `Images` WHERE product_id = " + product_id;
+
     pool.getConnection(function(err, conn){
         if(err){
             res.status(400).send("can't connect to the database")

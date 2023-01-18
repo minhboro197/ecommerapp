@@ -45,6 +45,7 @@ exports.put_products = (req,res) => {
             var sizes = req.body.sizes;
             var description = req.body.description;
             var brand = req.body.brand;
+            var quantity = req.body.quantity
 
             
             var pem = jwkToPem(jwk.keys[1]);
@@ -77,7 +78,8 @@ exports.put_products = (req,res) => {
                             descriptions: description,
                             stars: 0,
                             brand: brand,
-                            thumbnail: filesName[0] + ".png"
+                            thumbnail: filesName[0] + ".png",
+                            quantity: quantity
                         }
 
                         
@@ -94,7 +96,7 @@ exports.put_products = (req,res) => {
                                 for(var i = 0; i < filesName.length; i++){
                                     var imageInfor = {
                                         product_id: productId,
-                                        link: filesName[i]
+                                        link: filesName[i] + ".png"
                                     }
                                     imageArray[i] = imageInfor
                                 }
