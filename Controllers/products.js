@@ -154,3 +154,27 @@ exports.filter_products = (req, res) =>{
         return
     }
 };
+
+exports.get_allproducts = (req, res) =>{
+    var pagesize = req.params.pagesize;
+    var pagenum = req.params.pagenum -1;
+
+    var query = "SELECT * FROM `Products`";
+    var pagination = "LIMIT " + pagesize + " OFFSET " + pagenum * pagesize;
+    query += pagination;
+    
+    pool.getConnection(function(err, conn){
+        if(err){
+            res.status(400).send("can't connect to the database")
+            return
+        }
+        conn.query(query, function(err, rows) {
+            if(err){
+                res.status(400).send(err["sqlMessage"])
+                return
+            }
+            res.send(rows)
+            conn.release();
+        })
+    })
+}
