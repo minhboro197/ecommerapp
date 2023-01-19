@@ -119,12 +119,13 @@ exports.login = (req, res) => {
         Pool: userPool,
     };
     var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    
     cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: function(result) {
             var accessToken = result.getAccessToken().getJwtToken();
             var refreshToken = result.getRefreshToken();
             var idToken = result.getIdToken().getJwtToken();
-            
+            var userRole = result.idToken.payload['custom:user_role'];
             AWS.config.region = 'ap-southeast-1';
     
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
@@ -144,7 +145,8 @@ exports.login = (req, res) => {
                     var respond = {
                         accessToken: accessToken,
                         idToken: idToken,
-                        refreshToken: refreshToken
+                        refreshToken: refreshToken,
+                        userRole: userRole
                     }
                     res.send(respond)
                 }

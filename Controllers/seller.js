@@ -176,3 +176,44 @@ exports.put_products = (req,res) => {
     
 
 }
+
+exports.update_order_status = (req, res) => {
+    var accessToken = req.body.accessToken;
+    var order_id = req.body.order_id;
+    var order_status = req.body.order_status;
+
+    var pem = jwkToPem(jwk.keys[1]);
+    jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
+        if(err){
+            res.status(400).send("Invalid Token")
+            return
+        }
+
+        var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
+        pool.getConnection(function(err, conn){
+            if(err){
+                res.status(400).send("can't connect to the database")
+                return
+            }
+            conn.query(query, function(err, rows) {
+                if(err){
+                    res.status(400).send(err["sqlMessage"])
+                    return
+                }
+                var sellerId = rows[0].Id;
+
+                var query = "UPDATE `Orders` SET order_status = '"+ order_status + "' " + "WHERE id = " + order_id + " and user_id = " + sellerId;
+                conn.query(query, function(err, rows) {
+                    if(err){
+                        res.status(400).send(err["sqlMessage"])
+                        return
+                    }
+                    res.status(200).send(rows);
+    
+                })
+
+            })
+        })
+
+    })
+}
