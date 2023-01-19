@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.post('/upload', put_products);
 
-router.put('/updateorderstatus', update_order_status);
+router.post('/updateorderstatus', update_order_status);
 
 module.exports = router
