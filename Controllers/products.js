@@ -261,7 +261,7 @@ exports.add_product_to_favorite = (req, res) => {
 }
 
 exports.get_all_user_favorite = (req, res) =>{
-    var accessToken = req.body.accessToken;
+    var accessToken = req.query.accessToken;
 
     var pem = jwkToPem(jwk.keys[1]);
     jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
