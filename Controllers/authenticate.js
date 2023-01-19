@@ -4,7 +4,7 @@ var AmazonCognitoIdentity = require('amazon-cognito-identity-js');
 var AWS = require("aws-sdk");
 var jwt = require('jsonwebtoken');
 var jwkToPem = require('jwk-to-pem');
-
+const {pool}  = require("../database");
 
 var jwk = {"keys":[{"alg":"RS256","e":"AQAB","kid":"UvcC6JDyoJX8f+qfhnnFDHB7xCQqdQksmO5Pq/ZS/SQ=","kty":"RSA","n":"tOb4ZNU6xWicp2zjSTw9yQejF3kSXK6dIdMIcHxfoli4cdfAVPfyorx7vxGv-eTyWWhviVQeGPjrwE59_c_8JLOQCv5nX6EGAOKOxRIWyxWyQqEtkX3KbECHSrIGlcxNNF2wzJWvZsNz1bWn4VnQbemztnRW9-V77CzMvvisG8WPtFgh48Q1dH1iZDRpZDEbTys43h2oscJO8TO5327kqawr7GliPx7C1Lh1ZWkGyKni6ENcC_MzgJu8BmD8vAeqQfFcW9QXINiztIa1OaAh6EqtolmAvm6mtKvQmJdyGC6_Fa6sGwwhs7vw1VkSyyDsnCkjub-eouK0-EaY2MTzxQ","use":"sig"},{"alg":"RS256","e":"AQAB","kid":"VOr/TocPJSxiAbjQwCMNXaOlvpmqI1FFpoBLaYDz0XA=","kty":"RSA","n":"uCbFOkQH6jxoShB-gV_w_uoAwBUAn9DqQwrxgrKg2piO3r2oN9rP0ooh6NH9zOm2G2NnLLe8QTl9Eu65KkZ09Wwt7-RRADIDquMAE-g8TKWwmAlyCtcY6w96tskWk05K_LEY6zyPpRskT5Vg_dv6D3pn1fbQFavMRX-fdGyYJ0dsRWYskOQuqY9bfNKJGVI2vYKozD_eH4uyJjW_KQ_0GM_CePi8WokAq53Ivs71-CpNxiECK4p8j4NWHoKidTVGgCp-igHIpOryi_gS9P3KDSTwqjGpNEwtR6BoEvqLUEBk2Z1ff7pHiD_ZbTi0U1ZneORSSX7Urz5YH2Jl-4SaTQ","use":"sig"}]}
 
@@ -203,3 +203,29 @@ exports.signout = (req, res) => {
     })
 }
 
+exports.get_user_infor = (req, res) => {
+    var accessToken = req.query.accessToken;
+    
+    var pem = jwkToPem(jwk.keys[1]);
+    jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
+        if(err){
+            res.status(400).send(err);
+            return
+        }
+        var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
+        pool.getConnection(function(err, conn){
+            if(err){
+                res.status(400).send("can't connect to the database")
+                return
+            }
+            conn.query(query, function(err, rows) {
+                if(err){
+                    res.status(400).send(err["sqlMessage"])
+                    return
+                }
+                res.send(rows)
+                conn.release();
+            })
+        })
+    })
+}
