@@ -370,3 +370,29 @@ exports.get_product_by_id = (req, res) =>{
         })
     })
 }
+exports.sort_product_by_price = (req, res) =>{
+    var price = req.query.price
+
+    if(price == "cheap"){
+        var query = "SELECT * FROM `Products` ORDER BY price ASC"
+    }else{
+        var query = "SELECT * FROM `Products` ORDER BY price DESC";
+    }
+
+
+    pool.getConnection(function(err, conn){
+        if(err){
+            res.status(400).send("can't connect to the database")
+            return
+        }
+        conn.query(query, function(err, rows) {
+            if(err){
+                res.status(400).send(err["sqlMessage"])
+                return
+            }
+            res.send(rows)
+            conn.release();
+        })
+    })
+
+}
