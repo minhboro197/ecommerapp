@@ -209,6 +209,7 @@ exports.update_order_status = (req, res) => {
                         return
                     }
                     res.status(200).send(rows);
+                    conn.release();
     
                 })
 

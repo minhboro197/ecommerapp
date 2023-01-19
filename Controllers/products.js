@@ -350,3 +350,23 @@ exports.delete_favorite = (req, res) =>{
         })
     })
 }
+
+exports.get_product_by_id = (req, res) =>{
+    var product_id = req.query.id;
+    var query = "SELECT * FROM `Products` WHERE Id = " + product_id;
+
+    pool.getConnection(function(err, conn){
+        if(err){
+            res.status(400).send("can't connect to the database")
+            return
+        }
+        conn.query(query, function(err, rows) {
+            if(err){
+                res.status(400).send(err["sqlMessage"])
+                return
+            }
+            res.send(rows)
+            conn.release();
+        })
+    })
+}
