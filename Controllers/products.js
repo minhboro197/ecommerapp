@@ -51,16 +51,13 @@ exports.general_search = (req, res) => {
 
 exports.filter_products = (req, res) =>{
 
-    var input = req.query.title;
-    var inputArray = input.split(" ");
-
-    var title = req.query.title;
     var priceFrom = req.query.price_from;
     var priceTo = req.query.price_to;
     var starsFrom = req.query.stars_from;
     var color = req.query.color;
     var size = req.query.size;
     var brand = req.query.brand;
+    var category = req.query.category;
 
     var pagesize = req.params.pagesize;
     var pagenum = req.params.pagenum -1;
@@ -75,23 +72,10 @@ exports.filter_products = (req, res) =>{
         return
     }
 
-    if(!input){
-        res.status(400).send("Must have title query");
-        return;
-    }
-
     var pagination = "LIMIT " + pagesize + " OFFSET " + pagenum * pagesize;
 
-    var hasQueries = true;
+    var hasQueries = false;
     var conditions = '';
-
-    for (var i =0; i< inputArray.length; i++){
-        if(i > 0){
-            conditions += " or";
-        }
-        var subquery = " title like '%"+ inputArray[i] +"%' or category like '%"+ inputArray[i] +"%' or colors like '%"+ inputArray[i] +"%' or brand like '%"+ inputArray[i] +"%' ";
-        conditions += subquery;
-    }
 
     if((priceFrom != undefined && priceFrom != '' ) || (priceTo != undefined && priceTo != '' )){
         if(hasQueries){
@@ -130,7 +114,12 @@ exports.filter_products = (req, res) =>{
             conditions += "and ";
         }
         conditions += "size like '%"+ size +"%' ";
-        //hasQueries = true;
+    }
+    if(category != undefined && category != ''){
+        if(hasQueries){
+            conditions += "and ";
+        }
+        conditions += "category like '%"+ category +"%' ";
     }
     
     var query = "SELECT * FROM `Products`"
