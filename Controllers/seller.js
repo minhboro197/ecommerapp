@@ -165,7 +165,7 @@ exports.put_products = (req,res) => {
                                         res.send(err["sqlMessage"])
                                         return
                                     }
-                                    res.send("what");
+                                    //res.send("what");
                                     conn.release();
                                     
                                 })
