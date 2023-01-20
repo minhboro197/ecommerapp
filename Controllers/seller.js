@@ -153,9 +153,9 @@ exports.put_products = (req,res) => {
                                                                 return;
                                                             }
                                                             console.log(`File uploaded successfully at ${data.Location}`)
-                                                            //res.send("success")
-                                                            conn.release();
-                                                            return
+                                                            
+                                                            
+                                                            
                                                         });
                                                    }
                                                 }
