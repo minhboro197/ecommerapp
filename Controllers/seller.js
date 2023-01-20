@@ -55,6 +55,64 @@ exports.put_products = (req,res) => {
                     return
                 }
 
+
+                var poolData = {
+                    UserPoolId: process.env.USER_POOL_ID, // Your user pool id here
+                    ClientId: process.env.CLIENT_ID, // Your client id here
+                };
+                var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                
+                var userData = {
+                    Username: decoded.username,
+                    Pool: userPool,
+                };
+                var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+            
+
+                cognitoUser.getSession((err, result) =>{
+                    if(result){
+                        AWS.config.region = 'ap-southeast-1';
+        
+                        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                            IdentityPoolId: process.env.IDENTITY_POOL_ID, // your identity pool id here
+                            Logins: {
+                                // Change the key below according to the specific region your user pool is in.
+                                'cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_Fs7IcH1kr': result
+                                    .getIdToken()
+                                    .getJwtToken(),
+                            },
+                        });
+            
+                        AWS.config.credentials.refresh(error => {
+                            if (error) {
+                                console.error(error);
+                            } else {
+                                var s3 = new AWS.S3();
+
+                               for(var i =0; i < files.length; i++){
+                                    const params = {
+                                        Bucket: 'androidecommercebucket', 
+                                        Key: filesName[i] + ".png",
+                                        Body: files[i]
+                                    };
+                                    s3.upload(params, function(err, data) {
+                                        if (err) {
+                                            res.status(400).send("Can't upload")
+                                            return;
+                                        }
+                                        console.log(`File uploaded successfully at ${data.Location}`)
+                                        
+                                    });
+                               }
+                            }
+                        });
+                    }else{
+                        res.status(400).send(err)
+                        return
+                    }
+                })
+
+
                 var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
                 pool.getConnection(function(err, conn){
                     if(err){
@@ -107,71 +165,16 @@ exports.put_products = (req,res) => {
                                         res.send(err["sqlMessage"])
                                         return
                                     }
-
-                                    var poolData = {
-                                        UserPoolId: process.env.USER_POOL_ID, // Your user pool id here
-                                        ClientId: process.env.CLIENT_ID, // Your client id here
-                                    };
-                                    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                                    res.send(200);
+                                    conn.release();
                                     
-                                    var userData = {
-                                        Username: decoded.username,
-                                        Pool: userPool,
-                                    };
-                                    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-                                
-                    
-                                    cognitoUser.getSession((err, result) =>{
-                                        if(result){
-                                            AWS.config.region = 'ap-southeast-1';
-                            
-                                            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-                                                IdentityPoolId: process.env.IDENTITY_POOL_ID, // your identity pool id here
-                                                Logins: {
-                                                    // Change the key below according to the specific region your user pool is in.
-                                                    'cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_Fs7IcH1kr': result
-                                                        .getIdToken()
-                                                        .getJwtToken(),
-                                                },
-                                            });
-                                
-                                            AWS.config.credentials.refresh(error => {
-                                                if (error) {
-                                                    console.error(error);
-                                                } else {
-                                                    var s3 = new AWS.S3();
-                    
-                                                   for(var i =0; i < files.length; i++){
-                                                        const params = {
-                                                            Bucket: 'androidecommercebucket', 
-                                                            Key: filesName[i] + ".png",
-                                                            Body: files[i]
-                                                        };
-                                                        s3.upload(params, function(err, data) {
-                                                            if (err) {
-                                                                res.status(400).send("Can't upload")
-                                                                return;
-                                                            }
-                                                            console.log(`File uploaded successfully at ${data.Location}`)
-                                                            
-                                                        });
-                                                   }
-                                                   res.send(200);
-                                                   conn.release;
-                                                }
-                                            });
-                                        }else{
-                                            res.status(400).send(err)
-                                            return
-                                        }
-                                    })
                                 })
                             })
                         
-
-                        
                     })
                 })
+
+                
             })
         }
     })
