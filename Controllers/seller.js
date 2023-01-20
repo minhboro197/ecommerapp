@@ -107,7 +107,8 @@ exports.put_products = (req,res) => {
                                         res.send(err["sqlMessage"])
                                         return
                                     }
-                                     conn.release();
+                                    res.send("successfully")
+                                    conn.release();
                                 })
                             })
                         
@@ -158,6 +159,7 @@ exports.put_products = (req,res) => {
                                     s3.upload(params, function(err, data) {
                                         if (err) {
                                             res.status(400).send("Can't upload")
+                                            return;
                                         }
                                         console.log(`File uploaded successfully at ${data.Location}`)
                                     });
