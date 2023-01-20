@@ -173,7 +173,7 @@ exports.get_order_items = (req,res) => {
                 res.status(400).send("can't connect to the database")
                 return
             }
-            var query = "SELECT * FROM Products WHERE Id in (SELECT product_id FROM Order_item WHERE order_id = " + orderId+ ")";
+            var query = "SELECT * FROM Order_item INNER JOIN Products ON Products.Id = Order_item.product_id WHERE order_id = " + orderId;
             conn.query(query, function(err, rows) {
                 if(err){
                     res.status(400).send(err["sqlMessage"])
