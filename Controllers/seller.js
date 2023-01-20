@@ -202,7 +202,7 @@ exports.update_order_status = (req, res) => {
                 }
                 var sellerId = rows[0].Id;
 
-                var query = "UPDATE `Orders` SET order_status = '"+ order_status + "' " + "WHERE id = " + order_id + " and user_id = " + sellerId;
+                var query = "UPDATE `Orders` SET order_status = '"+ order_status + "' " + "WHERE id = " + order_id;
                 conn.query(query, function(err, rows) {
                     if(err){
                         res.status(400).send(err["sqlMessage"])
