@@ -186,3 +186,53 @@ exports.get_order_items = (req,res) => {
 
     })
 }
+
+exports.get_order_items_for_sellers = (req,res) =>{
+    var accessToken = req.query.accessToken;
+    var order_id = req.query.order_id;
+
+    var pem = jwkToPem(jwk.keys[1]);
+    jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
+        if(err){
+            res.status(400).send(err);
+            return
+        }
+
+
+        var seller_Id = "";
+        var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
+        pool.getConnection(function(err, conn){
+                if(err){
+                    res.status(400).send("can't connect to the database")
+                    return
+                }
+                conn.query(query, function(err, rows) {
+                    if(err){
+                        res.send(err["sqlMessage"])
+                        return
+                    }
+                    seller_Id = rows[0].Id;
+
+
+                    var query = "SELECT * FROM Products WHERE Id in (SELECT product_id FROM Order_item WHERE order_id = "+order_id+") and seller_id = " + seller_Id;
+
+                    pool.getConnection(function(err, conn){
+                        if(err){
+                            res.status(400).send("can't connect to the database")
+                            return
+                        }
+                        conn.query(query, function(err, rows) {
+                            if(err){
+                                res.status(400).send(err["sqlMessage"])
+                                return
+                            }
+                            res.send(rows)
+                            conn.release();
+                        })
+                    })
+
+                })
+        })
+
+    })
+}
