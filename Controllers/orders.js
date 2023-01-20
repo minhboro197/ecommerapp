@@ -71,7 +71,7 @@ exports.put_orders = (req, res) =>{
 }
 
 exports.get_orders = (req,res) => {
-    var accessToken = req.body.accessToken;
+    var accessToken = req.query.accessToken;
 
     var pem = jwkToPem(jwk.keys[1]);
     jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
@@ -100,6 +100,7 @@ exports.get_orders = (req,res) => {
                             res.send(err["sqlMessage"])
                             return
                         }
+   
                         res.status(200).send(rows);
                         conn.release();
                     })
@@ -109,6 +110,51 @@ exports.get_orders = (req,res) => {
 
 
     })
+}
+
+exports.get_orders_for_sellers = (req,res) =>{
+
+    var accessToken = req.query.accessToken;
+
+    var pem = jwkToPem(jwk.keys[1]);
+    jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
+        if(err){
+            res.status(400).send(err);
+            return
+        }
+
+        var userId = "";
+        var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
+        pool.getConnection(function(err, conn){
+                if(err){
+                    res.status(400).send("can't connect to the database")
+                    return
+                }
+                conn.query(query, function(err, rows) {
+                    if(err){
+                        res.send(err["sqlMessage"])
+                        return
+                    }
+                    userId = rows[0].Id;
+
+                    var query = "SELECT Orders.Id,Orders.shipping_adress, Orders.order_status, Orders.total, Users.username FROM Orders, Users WHERE Orders.Id in (SELECT order_id FROM Order_item WHERE product_id in (SELECT Id FROM Products WHERE seller_id = "+ userId +")) and Orders.user_id = Users.id ";
+                    conn.query(query, function(err, rows) {
+                        if(err){
+                            res.send(err["sqlMessage"])
+                            return
+                        }
+                        var buyerId = rows
+
+                        res.status(200).send(rows);
+                            conn.release();
+                        
+                    })
+
+                })
+            })
+
+    })
+
 }
 
 exports.get_order_items = (req,res) => {
