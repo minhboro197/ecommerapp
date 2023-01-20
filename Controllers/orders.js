@@ -158,8 +158,8 @@ exports.get_orders_for_sellers = (req,res) =>{
 }
 
 exports.get_order_items = (req,res) => {
-    var accessToken = req.body.accessToken;
-    var orderId = req.body.order_id;
+    var accessToken = req.query.accessToken;
+    var orderId = req.query.order_id;
 
     var pem = jwkToPem(jwk.keys[1]);
     jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
