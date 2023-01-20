@@ -51,7 +51,7 @@ exports.put_orders = (req, res) =>{
                                  //res.send(rows);
                                 var orderId = rows.insertId;
                                 var query = "INSERT INTO `Order_item` (order_id, product_id, quantity) VALUES ?"
-                                conn.query(query,[items.map(item => [orderId, item.product_id, item.quantity])], function(err, rows) {
+                                conn.query(query,[items.map(item => [orderId, item.product_id, item.quantity_ordered])], function(err, rows) {
                                     if(err){
                                         res.send(err["sqlMessage"])
                                         return
@@ -233,6 +233,73 @@ exports.get_order_items_for_sellers = (req,res) =>{
 
                 })
         })
+
+    })
+}
+
+exports.delete_order_from_seller = (req,res) => {
+    var accessToken = req.body.accessToken;
+    var order_id = req.body.order_id;
+
+    var pem = jwkToPem(jwk.keys[1]);
+    jwt.verify(accessToken, pem,{algorithms: ["RS256"]} , function(err, decoded) {
+        if(err){
+            res.status(400).send(err);
+            return
+        }
+        
+        var seller_Id = "";
+        var query = "SELECT * FROM `Users` WHERE username = '" + decoded.username +"'";
+        pool.getConnection(function(err, conn){
+                if(err){
+                    res.status(400).send("can't connect to the database")
+                    return
+                }
+                conn.query(query, function(err, rows) {
+                    if(err){
+                        res.send(err["sqlMessage"])
+                        return
+                    }
+                    seller_Id = rows[0].Id;
+                    
+                    var query = "SELECT * FROM Order_item WHERE order_id = (SELECT Id FROM Orders WHERE Id = "+ order_id+")"
+                    conn.query(query, function(err, rows) {
+                        if(err){
+                            res.send(err["sqlMessage"])
+                            return
+                        }
+                        if(rows.length >1){
+                            var query = "DELETE FROM Order_item WHERE order_id = (SELECT Id FROM Orders WHERE Id = "+order_id+") and product_id in (SELECT Id FROM Products WHERE seller_id = "+seller_Id+")"
+                            
+                            conn.query(query, function(err, rows) {
+                                if(err){
+                                    res.send(err["sqlMessage"])
+                                    return
+                                }
+                                res.send(rows);
+                                return;
+                            })
+                        
+                        }else{
+                            var query = "DELETE FROM Orders WHERE Id = " + order_id;
+                            
+                            conn.query(query, function(err, rows) {
+                                if(err){
+                                    res.send(err["sqlMessage"])
+                                    return
+                                }
+                                res.send(rows);
+                                return;
+                            })
+                        }
+                        
+                    })
+                    
+
+                })
+
+        })
+
 
     })
 }
