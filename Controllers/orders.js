@@ -50,8 +50,8 @@ exports.put_orders = (req, res) =>{
                                 }
                                  //res.send(rows);
                                 var orderId = rows.insertId;
-                                var query = "INSERT INTO `Order_item` (order_id, product_id, quantity) VALUES ?"
-                                conn.query(query,[items.map(item => [orderId, item.product_id, item.quantity_ordered])], function(err, rows) {
+                                var query = "INSERT INTO `Order_item` (order_id, product_id, quantity_ordered) VALUES ?"
+                                conn.query(query,[items.map(item => [orderId, item.product_id, item.quantity])], function(err, rows) {
                                     if(err){
                                         res.send(err["sqlMessage"])
                                         return
